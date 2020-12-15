@@ -36,9 +36,9 @@ namespace Terminal
 	{
 
 	public:
-		List<IGate^>^ Create(int number)
+		List<ISubscriber^>^ Create(int number)
 		{
-			auto result = gcnew List<IGate^>();
+			auto result = gcnew List<ISubscriber^>();
 
 			for (int i = 0; i < number; ++i)
 				result->Add(gcnew Gate(i + 1));

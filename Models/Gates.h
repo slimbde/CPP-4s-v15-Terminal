@@ -1,5 +1,6 @@
 #pragma once
 #include "Passengers.h"
+#include "PatternInterfaces.h"
 
 using namespace System;
 using namespace System::Collections::Generic;
@@ -7,30 +8,32 @@ using namespace System::Collections::Generic;
 
 namespace Terminal
 {
-
-	public interface class IGate
+	public ref struct GateInfo
 	{
-		property int MaxPeople;
+		String^ data;
+		int handledNum;
+		int totalHandledTime;
+		int Id;
 
-		void Enqueue(IHandleable^ one);
-		int GetLength();
-		int GetHandledNumber();
-		void Sync();
+		virtual  String^ ToString() override { return data; }
 	};
 
 
 
+
 	///////////////////////////////////////////////// GATE
-	public ref class Gate : IGate
+	public ref class Gate : ISubscriber
 	{
+		Unsubscriber^ unsubscriber;
+
 		int id;
 		Queue<IHandleable^>^ queue;
 		Queue<IHandleable^>^ handled;
+		int totalHandledTime;
 		int backCounter;
-		int maxPeople = 5;
 
 	public:
-		virtual property int MaxPeople { virtual int get() { return maxPeople; } virtual void set(int value) {}}
+		virtual property int Length { virtual int get() { return queue->Count; } virtual void set(int value) {}}
 
 		Gate(int id)
 		{
@@ -45,10 +48,19 @@ namespace Terminal
 		{
 			queue->Enqueue(one);
 		}
-		virtual int GetLength() { return queue->Count; }
-		virtual int GetHandledNumber() { return handled->Count; }
-		virtual void Sync()
+		virtual void Subscribe(IPublisher^ pub)
 		{
+			if (pub != nullptr)
+				unsubscriber = pub->RegisterSubscriber(this);
+		}
+		virtual void Unsubscribe() { unsubscriber->Unsubscribe(); }
+		virtual GateInfo^ Sync()
+		{
+			auto gi = gcnew GateInfo();
+			gi->data = String::Concat(this->ToString(), ": ", queue->Count, " чел.   обслужено: ", handled->Count);
+			gi->handledNum = handled->Count;
+			gi->Id = id;
+
 			if (backCounter == 0)
 			{
 				if (queue->Count > 0)
@@ -56,11 +68,15 @@ namespace Terminal
 					auto passgr = queue->Dequeue();
 					handled->Enqueue(passgr);
 					backCounter = passgr->GetHandlingTime();
+					
+					totalHandledTime += passgr->GetHandlingTime();
 				}
-				else
-					throw gcnew Exception("Люди закончились");
 			}
 			else --backCounter;
+
+			gi->totalHandledTime = totalHandledTime;
+
+			return gi;
 		}
 
 		virtual String^ ToString() override { return String::Concat("Окно ", id); }

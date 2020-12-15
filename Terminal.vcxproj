@@ -143,6 +143,7 @@
     </ClInclude>
     <ClInclude Include="Models\Factories.h" />
     <ClInclude Include="Models\Gates.h" />
+    <ClInclude Include="Models\PatternInterfaces.h" />
     <ClInclude Include="Models\Passengers.h" />
     <ClInclude Include="Models\Terminals.h" />
   </ItemGroup>
